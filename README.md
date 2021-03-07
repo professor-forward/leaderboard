@@ -13,22 +13,31 @@
 
 ## Deliverables
 
-### Deliverable 1 (5%) Hello World
+* [Deliverable 1 (5%) Hello World](deliverable1.md)
+
+### Deliverable 2 (5%) DB Backed Application
 
 | Mark | Description | Comment |
 | --- | --- | --- |
-| 2.0 | GitHub repository setup | [GitHub Repo](https://github.com/professor-forward/leaderboard) |
-| 2.5 | ER model  | See below |
-| 2.5 | Relational model / SQL schema | Both image and SQL below |
-| 1.0 | SQL examples to INSERT, UPDATE, SELECT and DELETE data | See examples below |
+| 3.0 | ER model  | See below |
+| 3.0 | Relational model / SQL schema | Les images ci-dessous Image below, et [schema.sql](db/schema.sql) and et [migrations](db/migrations) |
+| 1.0 | Application (read-only) | Instructions below |
+| 1.0 | SQL seed / examples to INSERT, UPDATE, SELECT and DELETE data | See below and seed.sql (link to come) |
 | 1.0 | README.md contains all required information | See _this_ page |
-| 1.0 | Git usage (commit messages, all students involved) | See [commit details in GitHub](https://github.com/professor-forward/leaderboard/commits/main) |
+| 1.0 | Git usage (commit messages, all students involved) | See [commit details in GitHub](https://github.com/professor-forward/leaderboard/commits/main)
 | / 10 | |
+
 
 ## Application Description
 
-The leaderboard database models an athlete, including
-details such as their name, date of birth, and identified gender.
+The leaderboard database models an `athletes`, including
+details such as their `name`, `date of birth`, and identified `gender`.
+
+The leaderboard tracks `competitions`.  A competition has a `name`,
+`venue`, a `start_date` and a `end_date`.
+
+An `athlete` can `register` for any competition.
+
 
 ## ER Model
 
@@ -44,69 +53,198 @@ The Relational Model (diagram) was also created with [Lucidchart](/lucidchart.md
 
 ## SQL Schema
 
-This was tested using [Online SQL Interpreter](https://www.db-book.com/db7/university-lab-dir/sqljs.html)
-available with the [textbook](https://www.db-book.com/db7/index.html).
+The [SQL Schema is available here](db/schema.sql).
 
-```sql
-CREATE TABLE athletes (
-  id int,
-  identifier varchar(50),
-  created timestamp,
-  modified timestamp,
-  name varchar(50),
-  dob date,
-  identified_gender varchar(6),
-  PRIMARY KEY (id)
-);
+It was tested using [PostgreSQL](https://www.postgresql.org/).
+
+To create the `leaderboard` database run
+
+```bash
+psql -c "create database leaderboard"
 ```
 
-## Example SQL Queries
+To create the schema run
 
-After running the above schema, you can test the queries below in the [Online SQL Interpreter](https://www.db-book.com/db7/university-lab-dir/sqljs.html)
-Refresh the browser if you want to start over.
-
-```sql
-INSERT INTO athletes (id, name, identified_gender, dob)
-VALUES
-(1, 'Andrew', 'm', '1986-12-01'),
-(2, 'Ayana', 'F', '1998-06-11'),
-(3, 'Hayden', 'm', '1996-07-24'),
-(4, 'August', 'm', '1999-09-09');
+```bash
+psql -d leaderboard -f ./db/schema.sql
 ```
 
-Let's find all 'F' athletes.
+If you already have a database, the migrations are available in
+
+```bash
+db/migrations
+```
+
+Run any (missing) migrations based on the timestamp date in the
+filename (i.e. `YYYYMMDDhhmmss` of `20200205100000-create-athletes.sql`).
+
+```sql
+psql -d leaderboard -f ./db/migrations/20200205100000-create-athletes.sql
+psql -d leaderboard -f ./db/migrations/20200206230000-create-migrations.sql
+psql -d leaderboard -f ./db/migrations/20200206230001-update-athletes.sql
+psql -d leaderboard -f ./db/migrations/20200206230002-create-competitions.sql
+```
+
+## Seeding Database
+
+To populate to database [run this SEED file](db/seed.sql).
+
+```bash
+psql -d leaderboard -f ./db/seed.sql
+```
+
+## Web App (PHP)
+
+A web application has developed to connect to our database.
+
+### Installation
+
+#### PHP 7.3+
+
+To run this project, you need to PHP and a command line.
+My environment (Mac OSX) comes with both already, if
+yours does not, please submit a PR showing how you got
+that up and running.
+
+This was tested on `PHP 7.3`
+
+```bash
+php --version
+```
+
+The output should show something similar to
+
+```bash
+PHP 7.3.9 (cli) (built: Nov  9 2019 08:08:13) ( NTS )
+Copyright (c) 1997-2018 The PHP Group
+Zend Engine v3.3.9, Copyright (c) 1998-2018 Zend Technologies
+```
+
+#### Postgres 11+
+
+The application connects to a postgres database.
+You will need to install that locally.
+
+This was tested on `PostgreSQL 11.5`
+
+```bash
+psql --version
+```
+
+The output should show something similar to
+
+```bash
+psql (PostgreSQL) 11.5
+```
+
+### Running
+
+To start the PHP server, run the following from
+the root of the project.
+
+```bash
+(cd public && php -S localhost:4000)
+```
+
+The output should look similar to
+
+```bash
+Listening on http://localhost:4000
+Document root is /Users/aforward/sin/projects/current/professor-forward/phpapp/public
+Press Ctrl-C to quit.
+```
+
+And now you can open in a browser, your PHP web app.
+
+[http://localhost:4000](http://localhost:4000)
+
+The output should look similar to
+
+![Home Page](assets/homepage.png)
+
+If you click on a competition, you will see the registered athletes.
+
+![Competition Summary](assets/competitions.png)
+
+Or, if you no athletes are registered yet.
+
+![No Athletes](assets/competition_no_athletes.png)
+
+
+## SQL Examples
+
+We also explore our database from the postgres console.
+
+```bash
+psql -d leaderboard
+```
+
+Let's find all 'f' athletes.
 
 ```sql
 SELECT *
 FROM athletes
-WHERE identified_gender = 'F';
+WHERE gender = 'f';
 ```
 
-Let's update all 'm's to 'M's.
+Changez les noms de nos athlètes.
 
 ```sql
 UPDATE athletes
-SET identified_gender = 'M'
-WHERE identified_gender = 'm';
+SET name = concat(name, ' Forward');
 ```
 
-And now all 'M' athletes.
+Ajoutons un nouvel athlète.
 
 ```sql
-SELECT *
-FROM athletes
-WHERE identified_gender = 'M';
+INSERT INTO athletes (name, gender, dob)
+VALUES
+('Kyle Krager', 'm', '1975-10-10');
 ```
 
-Let's delete all athletes.
+Inscrivons-lui dans le Bytown Closed.
 
 ```sql
-DELETE FROM athletes;
+INSERT INTO registrations (athlete_id, competition_id, age, gender)
+SELECT
+    (SELECT id FROM athletes WHERE name = 'Kyle Krager') AS athlete_id,
+    (SELECT id FROM competitions WHERE name = 'Bytown Closed 2020') AS competition_id,
+    45,
+    'm';
 ```
 
-And now the table is empty.
+Mettons à jour les âges de «Andrew» et «Ayana» dans le concours Bytown
+
+```sql
+UPDATE registrations
+SET age = 41
+WHERE athlete_id IN (
+  SELECT id from athletes WHERE name in ('Andrew Forward', 'Ayana Forward'));
+```
+
+Voyons tous les athlètes inscrits au Bytown Closed 2020.
+
+```sql
+SELECT athletes.name,
+       registrations.gender,
+       registrations.age,
+       competitions.name,
+       competitions.venue
+FROM registrations
+INNER JOIN athletes ON athletes.id = registrations.athlete_id
+INNER JOIN competitions ON competitions.id = registrations.competition_id
+WHERE competitions.name = 'Bytown Closed 2020';
+```
+
+Supprimons toutes les inscriptions.
+
+```sql
+DELETE FROM registrations;
+```
+
+Et maintenant, la table est vide.
 
 ```sql
 SELECT count(*)
-FROM athletes;
+FROM registrations;
 ```
